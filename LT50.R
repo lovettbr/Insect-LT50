@@ -8,7 +8,7 @@ library(ggplot2)
 library("xlsx")
 
 ####Import and format data####
-location="~/Desktop/Example_Data.csv"
+location="~/Downloads/Example_Data.csv"
 dat <- read.csv(location)
 
 #Remove NA values and melt data
