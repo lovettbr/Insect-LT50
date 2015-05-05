@@ -1,6 +1,7 @@
 ####Insect LT50 Analysis 5/4/15 Lovett####
 
 ####Load packages####
+
 #install.packages(c("reshape", "plyr", "ggplot2", "xlsx"))
 library(reshape)
 library(plyr)
@@ -8,6 +9,7 @@ library(ggplot2)
 library("xlsx")
 
 ####Import and format data####
+
 location="~/Downloads/Example_Data.csv"
 dat <- read.csv(location)
 
@@ -47,6 +49,7 @@ LT50=recast(LT50, Treatment~Trial)
 LT50$Mean=rowMeans(LT50, na.rm=T)
 
 ####Generate plots####
+
 #Plot data by replicate
 attach(dat)
 theme = theme_bw()+theme(text = element_text(size=20), axis.title.x = element_text(size=25), axis.title.x = element_text(size=25), title = element_text(size=30))
@@ -63,6 +66,7 @@ Agg.S.Plot=ggplot(dat.agg, aes(Day, per.mean, color=Treatment))+geom_line(size=2
 Agg.S.Plot
 
 ####Save plots and tables####
+
 #Save plots as png
 ggsave(Rep.S.Plot, file="Replicate Survival Plot.png", width=18, height=9)
 ggsave(Agg.S.Plot, file="Aggregated Survival Plot.png", width=15, height=9)
