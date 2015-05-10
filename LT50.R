@@ -1,4 +1,4 @@
-####Insect LT50 Analysis 5/4/15 Lovett####
+####Insect LT50 Analysis 6/9/15 Lovett####
 
 ####Load packages####
 
@@ -44,9 +44,21 @@ dat.agg=ddply(dat.min, c("Treatment", "Day"), summarize, per.mean=mean(Percent),
 #Calculate LT50 for each replicate with an LT50
 LT50=ddply(subset(dat.min, Percent <= 50), c("Trial", "Treatment"), summarize, LT50=min(Day))
 #Calculate means and standard error
-LT50.Error=ddply(LT50, "Treatment", summarize, "LT50 Mean"=mean(LT50), SE=sd(LT50)/sqrt(length(LT50)), Replicates=length(LT50))
+LT50.Error=ddply(LT50, "Treatment", summarize, "LT50 Mean"=mean(LT50), se=sd(LT50)/sqrt(length(LT50)), Replicates=length(LT50))
 LT50=recast(LT50, Treatment~Trial)
-LT50$Mean=rowMeans(LT50, na.rm=T)
+LT50=cbind(LT50, LT50.Error[2:4])
+
+####Find Abbott's Mortality####
+dat.ab=subset(dat, Day<=12)
+dat.ab=ddply(dat.ab, .(Treatment, Trial), transform, Alive=n-cumsum(Value))
+dat.ab=subset(dat.ab, Day==12)
+ctrl.tab=subset(dat.ab, Treatment=="ctrl")[c(2,7)]
+colnames(ctrl.tab)[2]="ctrl.n"
+dat.ab=merge(dat.ab, ctrl.tab, "Trial")
+dat.ab$Abbott=(1-dat.ab$Alive/dat.ab$ctrl.n)*100
+Abbott.Error=ddply(dat.ab, "Treatment", summarize, "Abbott Mean"=mean(Abbott), se=sd(Abbott)/sqrt(length(Abbott)), Replicates=length(Abbott))
+dat.ab=recast(dat.ab[c(1,2,9)], Treatment~Trial)
+Abbott=cbind(dat.ab, Abbott.Error[2:4])
 
 ####Generate plots####
 
@@ -75,7 +87,8 @@ ggsave(Agg.S.Plot.Error, file="Aggregated Survival Plot With Error Bars.png", wi
 #Save tables in excel sheet
 write.xlsx(dat, "LT50 Tables.xls", "Full Data", row.names=F, showNA=T)
 write.xlsx(dat.per, "LT50 Tables.xls", "Percent Data", row.names=F, showNA=T, append=T)
+colnames(dat.agg)[3]="Percent Mean"
 write.xlsx(dat.agg, "LT50 Tables.xls", "Aggregated Data", row.names=F, showNA=T, append=T)
 write.xlsx(LT50, "LT50 Tables.xls", "LT50", row.names=F, showNA=T, append=T)
-write.xlsx(LT50.Error, "LT50 Tables.xls", "LT50 Standard Error", row.names=F, showNA=T, append=T)
+write.xlsx(Abbott, "LT50 Tables.xls", "Abbott's Mortality", row.names=F, showNA=T, append=T)
 write.xlsx(n.vals, "LT50 Tables.xls", "N Values", row.names=F, showNA=T, append=T)
