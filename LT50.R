@@ -49,7 +49,8 @@ LT50=recast(LT50, Treatment~Trial)
 LT50=cbind(LT50, LT50.Error[2:4])
 
 ####Find Abbott's Mortality####
-dat.ab=subset(dat, Day<=12)
+ab.val=12
+dat.ab=subset(dat, Day<=ab.val)
 dat.ab=ddply(dat.ab, .(Treatment, Trial), transform, Alive=n-cumsum(Value))
 dat.ab=subset(dat.ab, Day==12)
 ctrl.tab=subset(dat.ab, Treatment=="ctrl")[c(2,7)]
