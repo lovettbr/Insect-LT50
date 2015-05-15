@@ -10,7 +10,7 @@ library("xlsx")
 
 ####Import and format data####
 
-location="~/Downloads/Example_Data.csv"
+location="~/GitHub/Example_Data.csv"
 dat <- read.csv(location)
 
 #Remove NA values and melt data
@@ -53,7 +53,7 @@ ab.val=12
 dat.ab=subset(dat, Day<=ab.val)
 dat.ab=ddply(dat.ab, .(Treatment, Trial), transform, Alive=n-cumsum(Value))
 dat.ab=subset(dat.ab, Day==12)
-ctrl.tab=subset(dat.ab, Treatment=="ctrl")[c(2,7)]
+ctrl.tab=subset(dat.ab, Treatment=="Control")[c(2,7)]
 colnames(ctrl.tab)[2]="ctrl.n"
 dat.ab=merge(dat.ab, ctrl.tab, "Trial")
 dat.ab$Abbott=(1-dat.ab$Alive/dat.ab$ctrl.n)*100
