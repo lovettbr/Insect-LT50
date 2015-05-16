@@ -1,4 +1,4 @@
-####Insect LT50 Analysis 6/9/15 Lovett####
+####Insect LT50 Analysis 5/15/15 Lovett####
 
 ####Load packages####
 
