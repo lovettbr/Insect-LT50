@@ -1,4 +1,4 @@
-####Insect LT50 Analysis 5/15/15 Lovett####
+####Insect LT50 Analysis 12/6/16 Lovett####
 
 ####Load packages####
 
@@ -9,8 +9,7 @@ library(ggplot2)
 library("xlsx")
 
 ####Import and format data####
-
-location="~/GitHub/Example_Data.csv"
+location="~/Downloads/Example_Data.csv"
 dat <- read.csv(location)
 
 #Remove NA values and melt data
@@ -27,7 +26,7 @@ colnames(n.vals)=c("Treatment", "Trial", "n")
 #Add n values to data, remove alive row, and calculate daily percent mortality
 dat=merge(dat, n.vals, by=c("Treatment", "Trial"))
 dat=dat[dat$Day!="Alive",]
-dat=ddply(dat, .(Treatment, Trial), transform, Percent=(n-cumsum(Value))/(n)*100)
+dat=ddply(dat, .(Treatment, Trial), transform, Percent=(n-cumsum(Value))/(n)*100, Alive=n-cumsum(Value))
 dat.per=recast(dat[c(1:3, 6)], Trial+Day~Treatment)
 dat$Day=as.numeric(as.character(dat$Day))
 
@@ -42,24 +41,11 @@ dat.min$se=ddply(dat.min, c("Day", "Treatment"), summarize, se=sd(Percent)/sqrt(
 dat.agg=ddply(dat.min, c("Treatment", "Day"), summarize, per.mean=mean(Percent), se=sd(Percent)/sqrt(length(Percent)))
 
 #Calculate LT50 for each replicate with an LT50
-LT50=ddply(subset(dat.min, Percent <= 50), c("Trial", "Treatment"), summarize, LT50=min(Day))
-#Calculate means and standard error
-LT50.Error=ddply(LT50, "Treatment", summarize, "LT50 Mean"=mean(LT50), se=sd(LT50)/sqrt(length(LT50)), Replicates=length(LT50))
-LT50=recast(LT50, Treatment~Trial)
-LT50=cbind(LT50, LT50.Error[2:4])
-
-####Find Abbott's Mortality####
-ab.val=12
-dat.ab=subset(dat, Day<=ab.val)
-dat.ab=ddply(dat.ab, .(Treatment, Trial), transform, Alive=n-cumsum(Value))
-dat.ab=subset(dat.ab, Day==12)
-ctrl.tab=subset(dat.ab, Treatment=="Control")[c(2,7)]
-colnames(ctrl.tab)[2]="ctrl.n"
-dat.ab=merge(dat.ab, ctrl.tab, "Trial")
-dat.ab$Abbott=(1-dat.ab$Alive/dat.ab$ctrl.n)*100
-Abbott.Error=ddply(dat.ab, "Treatment", summarize, "Abbott Mean"=mean(Abbott), se=sd(Abbott)/sqrt(length(Abbott)), Replicates=length(Abbott))
-dat.ab=recast(dat.ab[c(1,2,9)], Treatment~Trial)
-Abbott=cbind(dat.ab, Abbott.Error[2:4])
+surv.per=0.50
+LT50=ddply(dat,.(Trial, Treatment), summarize,
+             LT=as.numeric(dose.p(glm(cbind(Alive,Value)~Day,binomial),p=surv.per)))
+LT50[LT50$LT<0,]$LT=NA
+LT50.Error=ddply(LT50, .(Treatment), summarize, "LT50 Mean"=mean(LT,na.rm=T), se=sd(LT, na.rm=T)/sqrt(length(LT[!is.na(LT)])), Replicates=length(LT[!is.na(LT)]))
 
 ####Generate plots####
 
@@ -91,5 +77,5 @@ write.xlsx(dat.per, "LT50 Tables.xls", "Percent Data", row.names=F, showNA=T, ap
 colnames(dat.agg)[3]="Percent Mean"
 write.xlsx(dat.agg, "LT50 Tables.xls", "Aggregated Data", row.names=F, showNA=T, append=T)
 write.xlsx(LT50, "LT50 Tables.xls", "LT50", row.names=F, showNA=T, append=T)
-write.xlsx(Abbott, "LT50 Tables.xls", "Abbott's Mortality", row.names=F, showNA=T, append=T)
+write.xlsx(LT50.Error, "LT50 Tables.xls", "Abbott's Mortality", row.names=F, showNA=T, append=T)
 write.xlsx(n.vals, "LT50 Tables.xls", "N Values", row.names=F, showNA=T, append=T)
