@@ -26,7 +26,7 @@ colnames(n.vals)=c("Treatment", "Trial", "n")
 #Add n values to data, remove alive row, and calculate daily percent mortality
 dat=merge(dat, n.vals, by=c("Treatment", "Trial"))
 dat=dat[dat$Day!="Alive",]
-dat=ddply(dat, .(Treatment, Trial), transform, Percent=(n-cumsum(Value))/(n)*100, Alive=n-cumsum(Value))
+dat=ddply(dat, .(Treatment, Trial), transform, Percent=(n-cumsum(Value))/(n)*100, Alive=n-cumsum(Value), Dead=cumsum(Value))
 dat.per=recast(dat[c(1:3, 6)], Trial+Day~Treatment)
 dat$Day=as.numeric(as.character(dat$Day))
 
@@ -42,8 +42,8 @@ dat.agg=ddply(dat.min, c("Treatment", "Day"), summarize, per.mean=mean(Percent),
 
 #Calculate LT50 for each replicate with an LT50
 surv.per=0.50
-LT50=ddply(dat,.(Trial, Treatment), summarize,
-             LT=as.numeric(dose.p(glm(cbind(Alive,Value)~Day,binomial),p=surv.per)))
+LT50=ddply(dat.min,.(Trial, Treatment), summarize,
+             LT=as.numeric(dose.p(glm(cbind(Alive,Dead)~Day,binomial),p=surv.per)))
 LT50[LT50$LT<0,]$LT=NA
 LT50.Error=ddply(LT50, .(Treatment), summarize, "LT50 Mean"=mean(LT,na.rm=T), se=sd(LT, na.rm=T)/sqrt(length(LT[!is.na(LT)])), Replicates=length(LT[!is.na(LT)]))
 
