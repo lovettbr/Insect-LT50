@@ -7,6 +7,7 @@ library(reshape)
 library(plyr)
 library(ggplot2)
 library("xlsx")
+library(MASS)
 
 ####Import and format data####
 location="~/Downloads/Example_Data.csv"
